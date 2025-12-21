@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FuelTech Monitor - Real-Time Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { background-color: #121418; color: #ffffff; font-family: 'Inter', sans-serif; }
+        .sidebar { background-color: #1c1f26; border-right: 1px solid #2d3139; }
+        .card { background-color: #1c1f26; border-radius: 12px; border: 1px solid #2d3139; }
+        .active-menu { background-color: #2563eb; color: white; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <aside class="sidebar w-64 p-6 hidden md:flex flex-col">
+        <div class="flex items-center gap-3 mb-10">
+            <div class="text-orange-500 text-2xl font-bold">🔥</div>
+            <h1 class="font-bold text-xl">FuelTech Monitor</h1>
+        </div>
+        <nav class="flex-1 space-y-4">
+            <div class="active-menu p-3 rounded-lg flex items-center gap-3 cursor-pointer">
+                <span>🏠</span> Dashboard (Home)
+            </div>
+            <div class="text-gray-400 p-3 hover:text-white flex items-center gap-3 cursor-pointer">
+                <span>📈</span> Monitoring
+            </div>
+            <div class="text-gray-400 p-3 hover:text-white flex items-center gap-3 cursor-pointer">
+                <span>🕒</span> Histori Data
+            </div>
+            <div class="text-gray-400 p-3 hover:text-white flex items-center gap-3 cursor-pointer">
+                <span>⚙️</span> Pengaturan
+            </div>
+        </nav>
+        <div class="mt-auto space-y-4">
+            <div class="text-gray-400 p-3 hover:text-white flex items-center gap-3 cursor-pointer">
+                <span>📄</span> Laporan
+            </div>
+            <div class="text-gray-400 p-3 hover:text-white flex items-center gap-3 cursor-pointer">
+                <span>🚪</span> Log Out
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-y-auto">
+        <header class="flex justify-between items-center mb-10">
+            <h2 class="text-gray-400 text-sm font-medium">Sistem Pemantau Bahan Bakar</h2>
+            <div class="flex items-center gap-5">
+                <span class="text-xl relative cursor-pointer">
+                    🔔 <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-[#121418]"></span>
+                </span>
+                <div class="flex items-center gap-2 cursor-pointer">
+                    <div class="bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold">A</div>
+                    <span class="text-sm">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="mb-10">
+            <h3 class="text-lg font-bold mb-5">Ringkasan Umum</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="card p-6">
+                    <p class="text-4xl font-bold mb-1">1</p>
+                    <p class="text-gray-500 text-xs">Total Tangki Terdaftar</p>
+                </div>
+                <div class="card p-6">
+                    <p class="text-4xl font-bold mb-1" id="avg-fuel">0 <span class="text-lg font-normal">Liter</span></p>
+                    <p class="text-gray-500 text-xs">Rata-rata Bahan Bakar Tersisa</p>
+                </div>
+                <div class="card p-6">
+                    <p class="text-4xl font-bold mb-1">5 <span class="text-lg font-normal">Liter</span></p>
+                    <p class="text-gray-500 text-xs">Tidak Ada Peringatan Status Peringatan</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h3 class="text-lg font-bold mb-5">Widget Utama</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <div class="card p-8 flex flex-col items-center">
+                    <h4 class="font-bold mb-8 text-gray-300">Tangki Genset Utama</h4>
+                    <div style="width: 80px; height: 180px;">
+                        <canvas id="chart1"></canvas>
+                    </div>
+                    <div id="info1" class="text-center mt-6">
+                        </div>
+                </div>
+
+                <div class="card p-8 flex flex-col items-center">
+                    <h4 class="font-bold mb-8 text-gray-300">Tangki Kendahan Operasional A</h4>
+                    <div style="width: 80px; height: 180px;">
+                        <canvas id="chart2"></canvas>
+                    </div>
+                    <div id="info2" class="text-center mt-6">
+                        </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+<script src= "firebase.js"></script>
+
+    <script>
+        var config = {
+  apiKey: "AIzaSyBYVwVZUBLXSm7iR5Fp6k-dziJGEuhwExk",
+  authDomain: "megaboth007.firebaseapp.com",
+  databaseURL: "https://megaboth007.firebaseio.com",
+  projectId: "megaboth007",
+  storageBucket: "megaboth007.appspot.com",
+  messagingSenderId: "942424390212",
+  appId: "1:942424390212:web:c3622743b0fba57b5a1a11"
+
+  };
+firebase.initializeApp(config);
+var db = firebase.database();
+var jarak = db.ref("/test/jarak");
+var vol = db.ref("/test/vol");
+        
+        // Plugin untuk menggambar background abu-abu di dalam chart bar
+        const bgBarPlugin = {
+            id: 'bgBar',
+            beforeDraw: (chart) => {
+                const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
+                ctx.save();
+                ctx.fillStyle = '#2d3139'; // Warna tabung kosong
+                ctx.roundRect(left, top, width, height, 5);
+                ctx.fill();
+                ctx.restore();
+            }
+        };
+
+        function createTankChart(canvasId) {
+            return new Chart(document.getElementById(canvasId), {
+                type: 'bar',
+                data: {
+                    labels: ['Fuel'],
+                    datasets: [{
+                        data: [0],
+                        backgroundColor: '#22c55e',
+                        borderRadius: 5,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { beginAtZero: true, max: 100, display: false }
+                    }
+                },
+                plugins: [bgBarPlugin]
+            });
+        }
+
+        const chart1 = createTankChart('chart1');
+        const chart2 = createTankChart('chart2');
+
+        function updateRealTime() {
+            // Simulasi data random
+            
+
+vol.on("value", function(snapshot) {const val2=  snapshot.val();});
+           // const val1 = Math.floor(Math.random() * (900 - 600 + 1)) + 600; // Stabil di atas
+           // const val2 = Math.floor(Math.random() * (450 - 250 + 1)) + 250; // Lebih rendah
+jarak.on("value", function(snapshot) {
+    const val1=  snapshot.val()
+
+
+            // Update Chart 1
+            chart1.data.datasets[0].data = [val1];
+            chart1.update();
+            document.getElementById('info1').innerHTML = `
+                <p class="text-green-500 font-bold text-lg">${(val1/10).toFixed(0)}% | ${val1} Liter</p>
+                <div class="text-xs text-gray-500 mt-2">
+                    <p>Kapasitas Maksimal: 5 Liter</p>
+                    <p>Status: <span class="text-green-500 font-semibold">Normal</span></p>
+                </div>
+                <button class="mt-5 bg-blue-600 hover:bg-blue-700 text-white px-10 py-2 rounded-full text-xs font-bold transition">Lihat Detail</button>
+            `;
+});
+            // Update Chart 2
+            vol.on("value", function(snapshot) {
+    const val2=  snapshot.val()
+
+            chart2.data.datasets[0].data = [val2];
+            chart2.data.datasets[0].backgroundColor = val2 < 400 ? '#eab308' : '#22c55e';
+            chart2.update();
+            const statusColor = val2 < 400 ? 'text-yellow-500' : 'text-green-500';
+            const statusTxt = val2 < 400 ? 'Rendah' : 'Normal';
+            
+            document.getElementById('info2').innerHTML = `
+                <p class="${statusColor} font-bold text-lg">${(val2/10).toFixed(0)}% | ${val2} Liter</p>
+                <div class="text-xs text-gray-500 mt-2">
+                    <p>Kapasitas Maksimal: 5 Liter</p>
+                    <p>Status: <span class="${statusColor} font-semibold">${statusTxt}</span></p>
+                </div>
+                <button class="mt-5 bg-blue-600 hover:bg-blue-700 text-white px-10 py-2 rounded-full text-xs font-bold transition">Lihat Detail</button>
+            `;
+});
+            // Update Rata-rata
+            document.getElementById('avg-fuel').innerHTML = `${Math.floor((val1 + val2)/2)} <span class="text-lg font-normal">Liter</span>`;
+        }
+
+        // Jalankan update setiap 3 detik
+        setInterval(updateRealTime, 3000);
+        updateRealTime(); // Jalankan sekali saat start
+    </script>
+</body>
+</html>
