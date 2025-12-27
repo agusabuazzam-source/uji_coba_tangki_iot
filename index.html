@@ -176,7 +176,7 @@ jarak.on("value", function(snapshot) {
             chart1.data.datasets[0].data = [val1];
             chart1.update();
             document.getElementById('info1').innerHTML = `
-                <p class="text-green-500 font-bold text-lg">${(val1/10).toFixed(0)}% | ${val1} Liter</p>
+                <p class="text-green-500 font-bold text-lg">${val1} Cm</p>
                 <div class="text-xs text-gray-500 mt-2">
                     <p>Kapasitas Maksimal: 5 Liter</p>
                     <p>Status: <span class="text-green-500 font-semibold">Normal</span></p>
@@ -186,7 +186,7 @@ jarak.on("value", function(snapshot) {
 });
             // Update Chart 2
             vol.on("value", function(snapshot) {
-    const val2=  snapshot.val()
+    const val2=  snapshot.val()*2.55
 
             chart2.data.datasets[0].data = [val2];
             chart2.data.datasets[0].backgroundColor = val2 < 400 ? '#eab308' : '#22c55e';
@@ -195,7 +195,7 @@ jarak.on("value", function(snapshot) {
             const statusTxt = val2 < 400 ? 'Rendah' : 'Normal';
             
             document.getElementById('info2').innerHTML = `
-                <p class="${statusColor} font-bold text-lg">${(val2/10).toFixed(0)}% | ${val2} Liter</p>
+                <p class="${statusColor} font-bold text-lg"> ${val2} Liter</p>
                 <div class="text-xs text-gray-500 mt-2">
                     <p>Kapasitas Maksimal: 5 Liter</p>
                     <p>Status: <span class="${statusColor} font-semibold">${statusTxt}</span></p>
