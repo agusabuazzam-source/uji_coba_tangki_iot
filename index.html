@@ -25,24 +25,9 @@
             <div class="active-menu p-3 rounded-lg flex items-center gap-3 cursor-pointer">
                 <span>🏠</span> Dashboard (Home)
             </div>
-            <div class="text-gray-400 p-3 hover:text-white flex items-center gap-3 cursor-pointer">
-                <span>📈</span> Monitoring
-            </div>
-            <div class="text-gray-400 p-3 hover:text-white flex items-center gap-3 cursor-pointer">
-                <span>🕒</span> Histori Data
-            </div>
-            <div class="text-gray-400 p-3 hover:text-white flex items-center gap-3 cursor-pointer">
-                <span>⚙️</span> Pengaturan
-            </div>
+           
         </nav>
-        <div class="mt-auto space-y-4">
-            <div class="text-gray-400 p-3 hover:text-white flex items-center gap-3 cursor-pointer">
-                <span>📄</span> Laporan
-            </div>
-            <div class="text-gray-400 p-3 hover:text-white flex items-center gap-3 cursor-pointer">
-                <span>🚪</span> Log Out
-            </div>
-        </div>
+       
     </aside>
 
     <main class="flex-1 p-8 overflow-y-auto">
@@ -59,30 +44,13 @@
             </div>
         </header>
 
-        <section class="mb-10">
-            <h3 class="text-lg font-bold mb-5">Ringkasan Umum</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="card p-6">
-                    <p class="text-4xl font-bold mb-1">1</p>
-                    <p class="text-gray-500 text-xs">Total Tangki Terdaftar</p>
-                </div>
-                <div class="card p-6">
-                    <p class="text-4xl font-bold mb-1" id="avg-fuel">0 <span class="text-lg font-normal">Liter</span></p>
-                    <p class="text-gray-500 text-xs">Rata-rata Bahan Bakar Tersisa</p>
-                </div>
-                <div class="card p-6">
-                    <p class="text-4xl font-bold mb-1">5 <span class="text-lg font-normal">Liter</span></p>
-                    <p class="text-gray-500 text-xs">Tidak Ada Peringatan Status Peringatan</p>
-                </div>
-            </div>
-        </section>
-
+       
         <section>
             <h3 class="text-lg font-bold mb-5">Widget Utama</h3>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
                 <div class="card p-8 flex flex-col items-center">
-                    <h4 class="font-bold mb-8 text-gray-300">Tangki Genset Utama</h4>
+                    <h4 class="font-bold mb-8 text-gray-300">Ketinggian</h4>
                     <div style="width: 80px; height: 180px;">
                         <canvas id="chart1"></canvas>
                     </div>
@@ -91,7 +59,7 @@
                 </div>
 
                 <div class="card p-8 flex flex-col items-center">
-                    <h4 class="font-bold mb-8 text-gray-300">Tangki Kendahan Operasional A</h4>
+                    <h4 class="font-bold mb-8 text-gray-300">Volume</h4>
                     <div style="width: 80px; height: 180px;">
                         <canvas id="chart2"></canvas>
                     </div>
@@ -169,7 +137,7 @@ vol.on("value", function(snapshot) {const val2=  snapshot.val();});
            // const val1 = Math.floor(Math.random() * (900 - 600 + 1)) + 600; // Stabil di atas
            // const val2 = Math.floor(Math.random() * (450 - 250 + 1)) + 250; // Lebih rendah
 jarak.on("value", function(snapshot) {
-    const val1=  snapshot.val()
+    const val1=  snapshot.val()*1.05
 
 
             // Update Chart 1
@@ -179,9 +147,9 @@ jarak.on("value", function(snapshot) {
                 <p class="text-green-500 font-bold text-lg">${val1} Cm</p>
                 <div class="text-xs text-gray-500 mt-2">
                     <p>Kapasitas Maksimal: 5 Liter</p>
-                    <p>Status: <span class="text-green-500 font-semibold">Normal</span></p>
+             
                 </div>
-                <button class="mt-5 bg-blue-600 hover:bg-blue-700 text-white px-10 py-2 rounded-full text-xs font-bold transition">Lihat Detail</button>
+              
             `;
 });
             // Update Chart 2
@@ -198,9 +166,9 @@ jarak.on("value", function(snapshot) {
                 <p class="${statusColor} font-bold text-lg"> ${val2} Liter</p>
                 <div class="text-xs text-gray-500 mt-2">
                     <p>Kapasitas Maksimal: 5 Liter</p>
-                    <p>Status: <span class="${statusColor} font-semibold">${statusTxt}</span></p>
+                 
                 </div>
-                <button class="mt-5 bg-blue-600 hover:bg-blue-700 text-white px-10 py-2 rounded-full text-xs font-bold transition">Lihat Detail</button>
+             
             `;
 });
             // Update Rata-rata
