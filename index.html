@@ -1,183 +1,200 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FuelTech Monitor - Real-Time Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { background-color: #121418; color: #ffffff; font-family: 'Inter', sans-serif; }
-        .sidebar { background-color: #1c1f26; border-right: 1px solid #2d3139; }
-        .card { background-color: #1c1f26; border-radius: 12px; border: 1px solid #2d3139; }
-        .active-menu { background-color: #2563eb; color: white; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FuelTech Smart Tank</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<style>
+body {
+    background: radial-gradient(circle at top, #1e293b, #020617);
+    font-family: Inter, sans-serif;
+    color: white;
+}
+.glass {
+    background: rgba(30, 41, 59, 0.65);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,.08);
+}
+.glow-red { box-shadow: 0 0 25px rgba(239,68,68,.45); }
+.glow-green { box-shadow: 0 0 25px rgba(34,197,94,.35); }
+
+@keyframes shake {
+    from { transform: translateX(-4px); }
+    to { transform: translateX(4px); }
+}
+#alertBox { animation: shake .5s infinite alternate; }
+</style>
 </head>
-<body class="flex h-screen overflow-hidden">
 
-    <aside class="sidebar w-64 p-6 hidden md:flex flex-col">
-        <div class="flex items-center gap-3 mb-10">
-            <div class="text-orange-500 text-2xl font-bold">🔥</div>
-            <h1 class="font-bold text-xl">FuelTech Monitor</h1>
-        </div>
-        <nav class="flex-1 space-y-4">
-            <div class="active-menu p-3 rounded-lg flex items-center gap-3 cursor-pointer">
-                <span>🏠</span> Dashboard (Home)
-            </div>
-           
-        </nav>
-       
-    </aside>
+<body class="min-h-screen">
 
-    <main class="flex-1 p-8 overflow-y-auto">
-        <header class="flex justify-between items-center mb-10">
-            <h2 class="text-gray-400 text-sm font-medium">Sistem Pemantau Bahan Bakar</h2>
-            <div class="flex items-center gap-5">
-                <span class="text-xl relative cursor-pointer">
-                    🔔 <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-[#121418]"></span>
-                </span>
-                <div class="flex items-center gap-2 cursor-pointer">
-                    <div class="bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold">A</div>
-                    <span class="text-sm">▼</span>
-                </div>
-            </div>
-        </header>
+<!-- HEADER -->
+<header class="px-8 py-6 flex justify-between items-center border-b border-white/10">
+    <h1 class="text-2xl font-extrabold">
+        ⛽ <span class="text-blue-400">Fuel</span>Tech Monitor
+    </h1>
+    <span class="text-sm text-gray-400">Smart Tank Dashboard</span>
+</header>
 
-       
-        <section>
-            <h3 class="text-lg font-bold mb-5">Widget Utama</h3>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
-                <div class="card p-8 flex flex-col items-center">
-                    <h4 class="font-bold mb-8 text-gray-300">Ketinggian</h4>
-                    <div style="width: 80px; height: 180px;">
-                        <canvas id="chart1"></canvas>
-                    </div>
-                    <div id="info1" class="text-center mt-6">
-                        </div>
-                </div>
+<!-- ALERT -->
+<div id="alertBox" class="hidden fixed top-6 right-6 z-50">
+    <div class="bg-red-600/90 glow-red px-6 py-4 rounded-xl font-bold">
+        ⚠️ BBM KRITIS • &lt; 1 Liter
+    </div>
+</div>
 
-                <div class="card p-8 flex flex-col items-center">
-                    <h4 class="font-bold mb-8 text-gray-300">Volume</h4>
-                    <div style="width: 80px; height: 180px;">
-                        <canvas id="chart2"></canvas>
-                    </div>
-                    <div id="info2" class="text-center mt-6">
-                        </div>
-                </div>
+<!-- CONTENT -->
+<main class="p-8">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
 
-            </div>
-        </section>
-    </main>
-<script src= "firebase.js"></script>
+<!-- KETINGGIAN -->
+<div class="glass rounded-2xl p-8 text-center glow-green">
+    <h3 class="text-lg font-semibold text-blue-300 mb-6">Ketinggian BBM</h3>
+    <div class="mx-auto" style="width:100px;height:260px">
+        <canvas id="chartHeight"></canvas>
+    </div>
+    <div id="heightInfo" class="mt-6 text-xl font-bold text-emerald-400"></div>
+</div>
 
-    <script>
-        var config = {
-  apiKey: "AIzaSyBYVwVZUBLXSm7iR5Fp6k-dziJGEuhwExk",
-  authDomain: "megaboth007.firebaseapp.com",
-  databaseURL: "https://megaboth007.firebaseio.com",
-  projectId: "megaboth007",
-  storageBucket: "megaboth007.appspot.com",
-  messagingSenderId: "942424390212",
-  appId: "1:942424390212:web:c3622743b0fba57b5a1a11"
+<!-- VOLUME -->
+<div class="glass rounded-2xl p-8 text-center">
+    <h3 class="text-lg font-semibold text-blue-300 mb-6">Volume Tangki (Max 5L)</h3>
+    <div class="mx-auto" style="width:100px;height:260px">
+        <canvas id="chartVolume"></canvas>
+    </div>
+    <div id="volumeInfo" class="mt-6"></div>
+</div>
 
-  };
-firebase.initializeApp(config);
-var db = firebase.database();
-var jarak = db.ref("/test/jarak");
-var vol = db.ref("/test/vol");
-        
-        // Plugin untuk menggambar background abu-abu di dalam chart bar
-        const bgBarPlugin = {
-            id: 'bgBar',
-            beforeDraw: (chart) => {
-                const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
-                ctx.save();
-                ctx.fillStyle = '#2d3139'; // Warna tabung kosong
-                ctx.roundRect(left, top, width, height, 5);
-                ctx.fill();
-                ctx.restore();
+</div>
+</main>
+
+<script>
+/* ================= FIREBASE ================= */
+firebase.initializeApp({
+    apiKey: "AIzaSyBYVwVZUBLXSm7iR5Fp6k-dziJGEuhwExk",
+    authDomain: "megaboth007.firebaseapp.com",
+    databaseURL: "https://megaboth007.firebaseio.com",
+    projectId: "megaboth007"
+});
+
+const db = firebase.database();
+const jarak = db.ref("/test/jarak");
+const vol   = db.ref("/test/vol");
+
+/* ================= KONFIG ================= */
+const MAX_LITER = 5;
+const WARNING_LITER = 1;
+let alarmInterval = null;
+
+/* ================= AUDIO BEEP ================= */
+function playBeep() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.frequency.value = 1200;
+    gain.gain.value = 0.25;
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
+}
+
+if ("Notification" in window) Notification.requestPermission();
+
+/* ================= CHART ================= */
+function tankChart(id, maxVal) {
+    return new Chart(document.getElementById(id), {
+        type: "bar",
+        data: {
+            labels: ["BBM"],
+            datasets: [{
+                data: [0],
+                backgroundColor: "#22c55e",
+                borderRadius: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { display: false },
+                y: { display: false, max: maxVal }
             }
-        };
-
-        function createTankChart(canvasId) {
-            return new Chart(document.getElementById(canvasId), {
-                type: 'bar',
-                data: {
-                    labels: ['Fuel'],
-                    datasets: [{
-                        data: [0],
-                        backgroundColor: '#22c55e',
-                        borderRadius: 5,
-                        borderSkipped: false,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                    scales: {
-                        x: { display: false },
-                        y: { beginAtZero: true, max: 100, display: false }
-                    }
-                },
-                plugins: [bgBarPlugin]
-            });
         }
+    });
+}
 
-        const chart1 = createTankChart('chart1');
-        const chart2 = createTankChart('chart2');
+const heightChart = tankChart("chartHeight", 100);
+const volumeChart = tankChart("chartVolume", MAX_LITER);
 
-        function updateRealTime() {
-            // Simulasi data random
-            
+/* ================= REALTIME ================= */
 
-vol.on("value", function(snapshot) {const val2=  snapshot.val();});
-           // const val1 = Math.floor(Math.random() * (900 - 600 + 1)) + 600; // Stabil di atas
-           // const val2 = Math.floor(Math.random() * (450 - 250 + 1)) + 250; // Lebih rendah
-jarak.on("value", function(snapshot) {
-    const val1=  snapshot.val()*1.05
-
-
-            // Update Chart 1
-            chart1.data.datasets[0].data = [val1];
-            chart1.update();
-            document.getElementById('info1').innerHTML = `
-                <p class="text-green-500 font-bold text-lg">${val1} Cm</p>
-                <div class="text-xs text-gray-500 mt-2">
-                    <p>Kapasitas Maksimal: 5 Liter</p>
-             
-                </div>
-              
-            `;
+// KETINGGIAN
+jarak.on("value", snap => {
+    const tinggi = snap.val();
+    heightChart.data.datasets[0].data = [tinggi];
+    heightChart.update();
+    heightInfo.innerText = tinggi.toFixed(1) + " cm";
 });
-            // Update Chart 2
-            vol.on("value", function(snapshot) {
-    const val2=  snapshot.val()*2.55
 
-            chart2.data.datasets[0].data = [val2];
-            chart2.data.datasets[0].backgroundColor = val2 < 400 ? '#eab308' : '#22c55e';
-            chart2.update();
-            const statusColor = val2 < 400 ? 'text-yellow-500' : 'text-green-500';
-            const statusTxt = val2 < 400 ? 'Rendah' : 'Normal';
-            
-            document.getElementById('info2').innerHTML = `
-                <p class="${statusColor} font-bold text-lg"> ${val2} Liter</p>
-                <div class="text-xs text-gray-500 mt-2">
-                    <p>Kapasitas Maksimal: 5 Liter</p>
-                 
-                </div>
-             
-            `;
-});
-            // Update Rata-rata
-            document.getElementById('avg-fuel').innerHTML = `${Math.floor((val1 + val2)/2)} <span class="text-lg font-normal">Liter</span>`;
+// VOLUME + ALARM BERULANG
+vol.on("value", snap => {
+    let liter = snap.val();
+    if (liter > MAX_LITER) liter = MAX_LITER;
+
+    const kritis = liter < WARNING_LITER;
+
+    volumeChart.data.datasets[0].data = [liter];
+    volumeChart.data.datasets[0].backgroundColor = kritis ? "#ef4444" : "#22c55e";
+    volumeChart.update();
+
+    volumeInfo.innerHTML = `
+        <p class="text-2xl font-bold ${kritis ? 'text-red-400' : 'text-emerald-400'}">
+            ${liter.toFixed(2)} / ${MAX_LITER} Liter
+        </p>
+        <p class="text-sm text-gray-400">
+            Status: ${kritis ? "KRITIS" : "AMAN"}
+        </p>
+    `;
+
+    // ===== ALARM BERULANG =====
+    if (kritis) {
+        alertBox.classList.remove("hidden");
+
+        if (!alarmInterval) {
+            // beep tiap 2 detik
+            alarmInterval = setInterval(() => {
+                playBeep();
+            }, 2000);
+
+            if (Notification.permission === "granted") {
+                new Notification("FuelTech Alert 🚨", {
+                    body: "BBM kurang dari 1 Liter!"
+                });
+            }
         }
+    } else {
+        alertBox.classList.add("hidden");
 
-        // Jalankan update setiap 3 detik
-        setInterval(updateRealTime, 3000);
-        updateRealTime(); // Jalankan sekali saat start
-    </script>
+        if (alarmInterval) {
+            clearInterval(alarmInterval);
+            alarmInterval = null;
+        }
+    }
+});
+</script>
+
 </body>
 </html>
+
+
