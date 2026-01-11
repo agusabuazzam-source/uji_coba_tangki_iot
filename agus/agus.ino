@@ -20,8 +20,8 @@ unsigned char flowsensor = 15; // Sensor Input
 unsigned long currentTime;
 unsigned long cloopTime;
 
-#define WIFI_SSID "wifiku"
-#define WIFI_PASSWORD "widhiwinata"
+#define WIFI_SSID "fuetechmonitor"
+#define WIFI_PASSWORD "12345678"
 #define API_KEY "AIzaSyBYVwVZUBLXSm7iR5Fp6k-dziJGEuhwExk"
 #define DATABASE_URL "megaboth007.firebaseio.com" 
 #define USER_EMAIL "pertamina@gmail.com"
